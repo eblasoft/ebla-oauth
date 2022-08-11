@@ -1,0 +1,26 @@
+{
+  "name": "eblsoft-azure",
+  "version": "0.0.1",
+  "description": "",
+  "scripts": {
+    "test": "site/vendor/bin/phpunit tests/unit/Espo/Modules/EblaAzure",
+    "integration": "site/vendor/bin/phpunit tests/integration/Espo/Modules/EblaAzure",
+    "copy-custom": "node copy-custom.js",
+    "build-extension": "node build --extension",
+    "build-copy": "node build --copy",
+    "run-after-install": "node build --after-install",
+    "watch": "node build --watch",
+    "version-patch": "npm version patch",
+    "version-minor": "npm version minor",
+    "version-major": "npm version major"
+  },
+  "author": "Eblasoft Ltd.",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "archiver": "^4.0.1",
+    "fs-extra": "^9.0.0",
+    "mv": "^2.1.1",
+    "request": "^2.88.2",
+    "unzipper": "^0.10.11"
+  }
+}

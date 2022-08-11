@@ -1,0 +1,12 @@
+{
+    "module": "EblaAzure",
+    "name": "Ebla Azure",
+    "description": "Azure OAuth by Eblasoft.",
+    "author": "Eblasoft Ltd.",
+    "acceptableVersions": [
+        ">=6.0.0"
+    ],
+    "php": [
+        ">=7.4"
+    ]
+}
