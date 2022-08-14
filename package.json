@@ -1,6 +1,6 @@
 {
   "name": "eblsoft-azure",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "",
   "scripts": {
     "test": "site/vendor/bin/phpunit tests/unit/Espo/Modules/EblaAzure",
