@@ -1,0 +1,7 @@
+{
+    "Azure": {
+        "implementationClassName": "Espo\\Modules\\EblaOauth\\OAuthProviders\\Azure\\AzureOAuth",
+        "color": "#000",
+        "scopes": "openid offline_access profile user.read"
+    }
+}

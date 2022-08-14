@@ -1,0 +1,11 @@
+[
+    {
+        "route": "/ExternalAccount/action/getOAuth2Info",
+        "method": "get",
+        "params": {
+            "controller": "ExternalAccount",
+            "action": "getOAuth2Info"
+        },
+        "noAuth": true
+    }
+]

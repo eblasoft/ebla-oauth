@@ -1,0 +1,8 @@
+{
+    "fields": {
+        "tenantId": "Tenant Id"
+    },
+    "help": {
+        "Azure": "Obtain Credentials from [here](https://portal.azure.com)."
+    }
+}

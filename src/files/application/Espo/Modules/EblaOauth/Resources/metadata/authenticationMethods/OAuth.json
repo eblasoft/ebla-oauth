@@ -1,0 +1,49 @@
+{
+    "implementationClassName": "Espo\\Modules\\EblaOauth\\Core\\Authentication\\Logins\\OAuth",
+    "settings": {
+        "isAvailable": true,
+        "layout": {
+            "label": "OAuth",
+            "rows": [
+                [
+                    {
+                        "name": "oAuthMethod"
+                    },
+                    {
+                        "name": "oAuthEnforceLogin"
+                    }
+                ]
+            ]
+        },
+        "fieldList": [
+            "oAuthMethod",
+            "oAuthEnforceLogin"
+        ],
+        "dynamicLogic": {
+            "fields": {
+                "oAuthMethod": {
+                    "visible": {
+                        "conditionGroup": [
+                            {
+                                "type": "equals",
+                                "attribute": "authenticationMethod",
+                                "value": "OAuth"
+                            }
+                        ]
+                    }
+                },
+                "oAuthEnforceLogin": {
+                    "visible": {
+                        "conditionGroup": [
+                            {
+                                "type": "equals",
+                                "attribute": "authenticationMethod",
+                                "value": "OAuth"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}

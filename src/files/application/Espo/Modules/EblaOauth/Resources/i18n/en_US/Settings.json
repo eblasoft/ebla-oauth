@@ -1,0 +1,6 @@
+{
+    "fields": {
+        "oAuthMethod": "OAuth Method",
+        "oAuthEnforceLogin": "Enforce OAuth Login"
+    }
+}
