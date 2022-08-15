@@ -1,7 +1,7 @@
 {
-    "module": "EblaAzure",
-    "name": "Ebla Azure",
-    "description": "Azure OAuth by Eblasoft.",
+    "module": "EblaOauth",
+    "name": "Ebla OAuth",
+    "description": "Login using OAuth by Eblasoft.",
     "author": "Eblasoft Ltd.",
     "acceptableVersions": [
         ">=6.0.0"

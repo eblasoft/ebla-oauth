@@ -1,10 +1,10 @@
 {
-  "name": "eblsoft-azure",
+  "name": "ebla-oauth",
   "version": "0.1.0",
   "description": "",
   "scripts": {
-    "test": "site/vendor/bin/phpunit tests/unit/Espo/Modules/EblaAzure",
-    "integration": "site/vendor/bin/phpunit tests/integration/Espo/Modules/EblaAzure",
+    "test": "site/vendor/bin/phpunit tests/unit/Espo/Modules/EblaOauth",
+    "integration": "site/vendor/bin/phpunit tests/integration/Espo/Modules/EblaOauth",
     "copy-custom": "node copy-custom.js",
     "build-extension": "node build --extension",
     "build-copy": "node build --copy",
