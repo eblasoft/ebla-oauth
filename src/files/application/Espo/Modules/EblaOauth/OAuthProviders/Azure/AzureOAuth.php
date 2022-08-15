@@ -122,7 +122,7 @@ class AzureOAuth implements Provider
                 $idToken = json_decode(base64_decode(explode('.', $response['id_token'])[1]));
 
                 if ($idToken && $idToken->preferred_username) {
-                    return $idToken;
+                    return $idToken->preferred_username;
                 }
             } catch (Exception $e) {
 
