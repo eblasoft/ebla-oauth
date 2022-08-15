@@ -55,7 +55,7 @@ class AzureOAuth implements Provider
                 'response_type' => 'code',
                 'access_type' => 'offline',
                 'scope' => $scopes,
-                'redirectUri' => $this->config->get('siteUrl') . '/oauth-callback.php',
+                'redirect_uri' => $this->config->get('siteUrl') . '/oauth-callback.php',
             ]
         ];
     }
