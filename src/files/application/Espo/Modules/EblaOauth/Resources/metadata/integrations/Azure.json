@@ -16,5 +16,5 @@
             "required": true
         }
     },
-    "view": "ebla-oauth:views/outlook/integration"
+    "view": "ebla-oauth:views/admin/integrations/oauth2"
 }
