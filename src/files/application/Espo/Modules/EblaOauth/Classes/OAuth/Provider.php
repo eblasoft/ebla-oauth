@@ -5,7 +5,7 @@ namespace Espo\Modules\EblaOauth\Classes\OAuth;
 use stdClass;
 
 /**
- * An SMS sender.
+ * OAuth provider interface
  */
 interface Provider
 {
