@@ -1,7 +1,6 @@
 # TODO 
 
 - how to : create installable extension instruction
-- 
 
 
 # Azure OAuth by Eblasoft
