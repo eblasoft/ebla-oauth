@@ -1,8 +1,3 @@
-# TODO 
-
-- how to : create installable extension instruction
-
-
 # Azure OAuth by Eblasoft
 
 Authentication extension that allows EspoCRM to authenticate 
@@ -22,17 +17,25 @@ The current version and documentation has been developed with Azure Active Direc
 - administration rights to install extensions
 - an OAuth authentication server, like Azure AD or similar.
 
-## Install : 
+# Install
 
 - download the latest release of the extension
 - login in EspoCRM with administrator credentials
 - install the extension in the administrative interface.
 
-## Configuration : 
+# OAuth Configuration
 
 - You will need to create an application in Azure AD. You will need to set the callback url to https://mysite.com/oauth-callback.php
 - From this definition you will get the application ID, tenant ID, and client Secret.
-- 
+- Enter the details in the configuration
+
+# Set up
+
+The extension can be set up to allow OAuth authenication for a single user, ?mixed?, or enforced for all users.
+>> insert screenshot here
+
+
+# Furthermore
 
 ## Credits and inspired by : 
 
