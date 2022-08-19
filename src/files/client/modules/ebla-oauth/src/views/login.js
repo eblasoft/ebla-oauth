@@ -71,46 +71,30 @@ define('ebla-oauth:views/login', 'views/login', function (Dep) {
                 window.location.reload();
             };
 
-            var self = this;
+            const self = this;
 
-            var path = options.path;
+            let path = options.path;
 
-            var arr = [];
-            var params = (options.params || {});
-            for (var name in params) {
+            const urlParams = [];
+            const params = (options.params || {});
+            for (let name in params) {
                 if (params[name]) {
-                    arr.push(name + '=' + encodeURI(params[name]));
+                    urlParams.push(name + '=' + encodeURI(params[name]));
                 }
             }
-            path += '?' + arr.join('&');
+            path += '?' + urlParams.join('&');
 
-            var parseUrl = function (str) {
-                var data = {};
+            const parseUrl = this.getParseUrl();
 
-                str = str.substr(str.indexOf('?') + 1, str.length);
-                str.split('&').forEach(function (part) {
-                    var arr = part.split('=');
-                    var name = decodeURI(arr[0]);
-                    var value = decodeURI(arr[1] || '');
-                    data[name] = value;
-                }, this);
-
-                if (!data.error && !data.code) {
-                    return null;
-                }
-
-                return data;
-            }
-
-            popup = window.open(path, options.windowName, options.windowOptions);
-            interval = window.setInterval(function () {
+            const popup = window.open(path, options.windowName, options.windowOptions);
+            const interval = window.setInterval(() => {
                 if (popup.closed) {
                     window.clearInterval(interval);
 
                     self.undisableForm();
                     self.notify(false);
                 } else {
-                    var res = parseUrl(popup.location.href.toString());
+                    let res = parseUrl(popup.location.href.toString());
                     if (res) {
                         callback.call(self, res);
                         popup.close();
@@ -120,62 +104,78 @@ define('ebla-oauth:views/login', 'views/login', function (Dep) {
             }, 500);
         },
 
+        getParseUrl: function () {
+            return function (str) {
+                const data = {};
+
+                str = str.substr(str.indexOf('?') + 1, str.length);
+                str.split('&').forEach(function (part) {
+                    const arr = part.split('=');
+                    const name = decodeURI(arr[0]);
+                    data[name] = decodeURI(arr[1] || '');
+                }, this);
+
+                if (!data.error && !data.code) {
+                    return null;
+                }
+
+                return data;
+            };
+        },
+
         connect: function () {
             this.disableForm();
 
             Espo.Ui.notify(this.translate('pleaseWait', 'messages'));
 
-            this.popup(this.oAuthInfo
-                , function (res) {
-                    let userName = '_oAuthCode';
+            this.popup(this.oAuthInfo, (res) => {
+                let userName = '_oAuthCode';
+                let password = res.code;
+                let authString = '';
 
-                    let password = res.code;
+                try {
+                    authString = btoa(userName + ':' + password);
+                } catch (e) {
+                    Espo.Ui.error(this.translate('Error') + ': ' + e.message, true);
+                    this.undisableForm();
+                    throw e;
+                }
 
-                    try {
-                        var authString = Base64.encode(userName + ':' + password);
-                    } catch (e) {
-                        Espo.Ui.error(this.translate('Error') + ': ' + e.message, true);
+                Espo.Ajax.getRequest('App/user', null, {
+                    login: true,
+                    headers: {
+                        'Authorization': 'Basic ' + authString,
+                        'Espo-Authorization': authString,
+                        'Espo-Authorization-By-Token': false,
+                        'Espo-Authorization-Create-Token-Secret': true,
+                    },
+                }).then(data => {
+                    this.notify(false);
 
-                        this.undisableForm();
+                    this.trigger('login', data.user.userName, data);
+                }).catch(xhr => {
+                    this.undisableForm();
 
-                        throw e;
+                    if (xhr.status === 401) {
+                        let data = {};
+                        if ('responseJSON' in xhr) {
+                            data = xhr.responseJSON || {};
+                        }
+
+                        let statusReason = xhr.getResponseHeader('X-Status-Reason');
+
+                        if (statusReason === 'second-step-required') {
+                            xhr.errorIsHandled = true;
+
+                            this.onSecondStepRequired(userName, password, data);
+
+                            return;
+                        }
+
+                        this.onWrongCredentials();
                     }
-
-                    Espo.Ajax
-                        .getRequest('App/user', null, {
-                            login: true,
-                            headers: {
-                                'Authorization': 'Basic ' + authString,
-                                'Espo-Authorization': authString,
-                                'Espo-Authorization-By-Token': false,
-                                'Espo-Authorization-Create-Token-Secret': true,
-                            },
-                        })
-                        .then(data => {
-                            this.notify(false);
-
-                            this.trigger('login', data.user.userName, data);
-                        })
-                        .catch(xhr => {
-                            this.undisableForm();
-
-                            if (xhr.status === 401) {
-                                let data = xhr.responseJSON || {};
-
-                                let statusReason = xhr.getResponseHeader('X-Status-Reason');
-
-                                if (statusReason === 'second-step-required') {
-                                    xhr.errorIsHandled = true;
-
-                                    this.onSecondStepRequired(userName, password, data);
-
-                                    return;
-                                }
-
-                                this.onWrongCredentials();
-                            }
-                        });
                 });
+            });
         },
     });
 });
