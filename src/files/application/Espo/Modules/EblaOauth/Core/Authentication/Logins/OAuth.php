@@ -56,19 +56,72 @@ class OAuth implements Login
         $authToken = $data->getAuthToken();
 
         if ($authToken) {
-            $user = $this->loginByToken($username, $authToken);
-
-            if ($user) {
-                return Result::success($user);
-            } else {
-                return Result::fail(FailReason::WRONG_CREDENTIALS);
-            }
+            return $this->checkAuthToken($username, $authToken);
         }
 
         if ($username !== "_oAuthCode") {
             return $this->baseLogin->login($data, $request);
         }
 
+        return $this->doLogin($code, $username);
+    }
+
+    private function loginByToken(?string $username, AuthToken $authToken = null): ?User
+    {
+        if (isset($authToken) && isset($username)) {
+            $userId = $authToken->getUserId();
+
+            $user = $this->entityManager->getEntity('User', $userId);
+
+            if ($user) {
+                $tokenUsername = $user->get('userName');
+
+                if (strtolower($username) != strtolower($tokenUsername)) {
+                    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+
+                    $this->log->alert(
+                        'Unauthorized access attempt for user [' . $username . '] from IP [' . $ip . ']'
+                    );
+
+                    return null;
+                }
+
+                /** @var ?User */
+                return $this->entityManager
+                    ->getRDBRepository('User')
+                    ->where([
+                        'userName' => $username,
+                    ])
+                    ->findOne();
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param string|null $username
+     * @param AuthToken $authToken
+     * @return Result
+     */
+    protected function checkAuthToken(?string $username, AuthToken $authToken): Result
+    {
+        $user = $this->loginByToken($username, $authToken);
+
+        if ($user) {
+            return Result::success($user);
+        } else {
+            return Result::fail(FailReason::WRONG_CREDENTIALS);
+        }
+    }
+
+    /**
+     * @param string $code
+     * @param string $username
+     * @return Result
+     */
+    protected function doLogin(string $code, string $username): Result
+    {
         $response = $this->provider->getAccessTokenFromAuthorizationCode($code);
 
         if (!$response['access_token']) {
@@ -93,45 +146,6 @@ class OAuth implements Login
             return Result::fail(FailReason::USER_NOT_FOUND);
         }
 
-        if (!$user) {
-            return Result::fail();
-        }
-
-        return Result::success($user);
-    }
-
-    private function loginByToken(?string $username, AuthToken $authToken = null): ?User
-    {
-        if (!isset($authToken) || $username === null) {
-            return null;
-        }
-
-        $userId = $authToken->getUserId();
-
-        $user = $this->entityManager->getEntity('User', $userId);
-
-        if (!$user) {
-            return null;
-        }
-
-        $tokenUsername = $user->get('userName');
-
-        if (strtolower($username) != strtolower($tokenUsername)) {
-            $ip = $_SERVER['REMOTE_ADDR'] ?? '';
-
-            $this->log->alert(
-                'Unauthorized access attempt for user [' . $username . '] from IP [' . $ip . ']'
-            );
-
-            return null;
-        }
-
-        /** @var ?User */
-        return $this->entityManager
-            ->getRDBRepository('User')
-            ->where([
-                'userName' => $username,
-            ])
-            ->findOne();
+        return !$user ? Result::fail() : Result::success($user);
     }
 }
