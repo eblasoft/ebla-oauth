@@ -13,6 +13,8 @@ class AfterUninstall
     {
         try {
             $this->container->get('dataManager')->clearCache();
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+            // Exception handling
+        }
     }
 }

@@ -113,6 +113,9 @@ class AzureOAuth implements Provider
             </html>';
     }
 
+    /**
+     * @throws Error
+     */
     public function getEmailAddressFromResponseResult($response): string
     {
         $accessToken = $response['access_token'];
@@ -125,20 +128,24 @@ class AzureOAuth implements Provider
                     return $idToken->preferred_username;
                 }
             } catch (Exception $e) {
-
+                // Exception handling
             }
         }
 
         $profileData = $this->sendGetRequest('https://graph.microsoft.com/v1.0/me/', $accessToken);
 
-        if (!$profileData) throw new Error('Profile data not received');
+        if (!$profileData) {
+            throw new Error('Profile data not received');
+        }
 
         $profileData = json_decode($profileData, true);
         $email = $profileData['mail'] ?? $profileData['userPrincipalName'];
 
-        if (!$email) throw new Error('Email not received' . var_dump($profileData));
+        if (!$email) {
+            throw new Error('Email not received' . print_r($profileData));
+        }
 
-        return $userInfo->mail ?? $userInfo->userPrincipalName ?? $userInfo->preferred_username ?? '';
+        return $email;
     }
 
     protected function sendGetRequest($URL, $accessToken)
