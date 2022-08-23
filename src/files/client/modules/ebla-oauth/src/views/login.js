@@ -153,7 +153,7 @@ define('ebla-oauth:views/login', 'views/login', function (Dep) {
                     this.notify(false);
 
                     this.trigger('login', data.user.userName, data);
-                }).catch(xhr => {
+                }).fail(xhr => {
                     this.undisableForm();
 
                     if (xhr.status === 401) {
