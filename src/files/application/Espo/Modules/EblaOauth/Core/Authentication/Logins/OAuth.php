@@ -12,7 +12,6 @@ use Espo\Core\{Api\Request,
     Exceptions\Error,
     InjectableFactory,
     ORM\EntityManager,
-    Utils\Config,
     Utils\Log
 };
 use Espo\Entities\User;
@@ -26,20 +25,20 @@ class OAuth implements Login
     private EntityManager $entityManager;
     private Log $log;
     private Espo $baseLogin;
-    private Config $config;
 
+    /**
+     * @throws Error
+     */
     public function __construct(
         EntityManager     $entityManager,
         Log               $log,
         Espo              $baseLogin,
-        Config            $config,
         InjectableFactory $injectableFactory
     )
     {
         $this->entityManager = $entityManager;
         $this->log = $log;
         $this->baseLogin = $baseLogin;
-        $this->config = $config;
 
         $this->provider = $injectableFactory->create(ProviderFactory::class)->create();
     }
@@ -64,6 +63,22 @@ class OAuth implements Login
         }
 
         return $this->doLogin($code, $username);
+    }
+
+    /**
+     * @param string|null $username
+     * @param AuthToken $authToken
+     * @return Result
+     */
+    protected function checkAuthToken(?string $username, AuthToken $authToken): Result
+    {
+        $user = $this->loginByToken($username, $authToken);
+
+        if ($user) {
+            return Result::success($user);
+        } else {
+            return Result::fail(FailReason::WRONG_CREDENTIALS);
+        }
     }
 
     private function loginByToken(?string $username, AuthToken $authToken = null): ?User
@@ -100,22 +115,6 @@ class OAuth implements Login
     }
 
     /**
-     * @param string|null $username
-     * @param AuthToken $authToken
-     * @return Result
-     */
-    protected function checkAuthToken(?string $username, AuthToken $authToken): Result
-    {
-        $user = $this->loginByToken($username, $authToken);
-
-        if ($user) {
-            return Result::success($user);
-        } else {
-            return Result::fail(FailReason::WRONG_CREDENTIALS);
-        }
-    }
-
-    /**
      * @param string $code
      * @param string $username
      * @return Result
@@ -138,14 +137,14 @@ class OAuth implements Login
             ])
             ->findOne();
 
-        if (!isset($user)) {
+        if (!$user) {
             $this->log->warning(
-                "OAuth: Authentication success for user {$username}, but user is not created in EspoCRM."
+                "OAuth: Authentication success for user $username, but user is not created in EspoCRM."
             );
 
             return Result::fail(FailReason::USER_NOT_FOUND);
         }
 
-        return !$user ? Result::fail() : Result::success($user);
+        return Result::success($user);
     }
 }

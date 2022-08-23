@@ -3,12 +3,10 @@
 namespace Espo\Modules\EblaOauth\Classes\OAuth;
 
 use Espo\Core\Binding\Factory;
-use Espo\Core\Exceptions\BadRequest;
 use Espo\Core\Exceptions\Error;
 use Espo\Core\InjectableFactory;
 use Espo\Core\Utils\Config;
 use Espo\Core\Utils\Metadata;
-use RuntimeException;
 
 class ProviderFactory implements Factory
 {

@@ -2,9 +2,7 @@
 
 namespace Espo\Modules\EblaOauth\Services;
 
-use Espo\Modules\EblaOauth\Classes\OAuth\Provider;
 use Espo\Modules\EblaOauth\Classes\OAuth\ProviderFactory;
-use RuntimeException;
 use stdClass;
 
 class ExternalAccount extends \Espo\Services\ExternalAccount

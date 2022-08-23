@@ -5,6 +5,7 @@ namespace Espo\Modules\EblaOauth\OAuthProviders\Azure;
 use Espo\Core\Exceptions\Error;
 use Espo\Core\ORM\EntityManager;
 use Espo\Core\Utils\Config;
+use Espo\Core\Utils\Log;
 use Espo\Core\Utils\Metadata;
 use Espo\Entities\Integration;
 use Espo\Modules\EblaOauth\Classes\OAuth\Provider;
@@ -21,15 +22,19 @@ class AzureOAuth implements Provider
 
     protected Config $config;
 
+    protected Log $log;
+
     public function __construct(
         EntityManager $entityManager,
         Metadata      $metadata,
-        Config        $config
+        Config        $config,
+        Log           $log
     )
     {
         $this->entityManager = $entityManager;
         $this->metadata = $metadata;
         $this->config = $config;
+        $this->log = $log;
     }
 
     public function getClientInfo(): ?stdClass
@@ -76,7 +81,11 @@ class AzureOAuth implements Provider
             $code . '&client_secret=' .
             $clientSecret;
 
+        $this->log->debug(self::METHOD . ': Authentication request data: ' . $requestData);
+
         $response = $this->postRequest($endpoint, $requestData);
+
+        $this->log->debug(self::METHOD . ': Authentication response data: ' . $response);
 
         return json_decode($response, true);
     }
@@ -125,14 +134,19 @@ class AzureOAuth implements Provider
                 $idToken = json_decode(base64_decode(explode('.', $response['id_token'])[1]));
 
                 if ($idToken && $idToken->preferred_username) {
+                    $this->log->debug(self::METHOD . ': id_token: ' . json_encode($idToken));
+
                     return $idToken->preferred_username;
                 }
             } catch (Exception $e) {
                 // Exception handling
+                $this->log->error(self::METHOD . ': Error while getting email address from id_token: ' . $e->getMessage());
             }
         }
 
         $profileData = $this->sendGetRequest('https://graph.microsoft.com/v1.0/me/', $accessToken);
+
+        $this->log->debug(self::METHOD . ': Profile data: ' . json_encode($profileData));
 
         if (!$profileData) {
             throw new Error('Profile data not received');
@@ -144,6 +158,8 @@ class AzureOAuth implements Provider
         if (!$email) {
             throw new Error('Email not received' . print_r($profileData));
         }
+
+        $this->log->debug(self::METHOD . ': Founded email: ' . $email);
 
         return $email;
     }
