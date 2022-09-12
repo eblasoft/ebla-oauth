@@ -123,7 +123,7 @@ class OAuth implements Login
     {
         $response = $this->provider->getAccessTokenFromAuthorizationCode($code);
 
-        if (!$response['access_token']) {
+        if (!$response['id_token']) {
             return Result::fail(FailReason::CODE_NOT_VERIFIED);
         }
 

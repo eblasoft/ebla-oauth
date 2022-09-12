@@ -14,7 +14,7 @@ define('ebla-oauth:views/login', 'views/login', function (Dep) {
 
             this.oAuthMethod = this.getConfig().get('oAuthMethod');
 
-            if (!this.oAuthMethod) return;
+            if (this.getConfig().get('authenticationMethod') !== 'OAuth' || !this.oAuthMethod) return;
 
             this.wait(true);
 

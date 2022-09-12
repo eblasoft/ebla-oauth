@@ -90,6 +90,9 @@ class AzureOAuth implements Provider
         return json_decode($response, true);
     }
 
+    /**
+     * @throws Error
+     */
     public function postRequest($endpoint, $data)
     {
         $ch = curl_init($endpoint);
@@ -99,79 +102,29 @@ class AzureOAuth implements Provider
 
         $response = curl_exec($ch);
         if ($cError = curl_error($ch)) {
-            echo $this->errorMessage($cError);
-            exit;
+            throw new Error('Something\'s gone wrong ' . $cError);
         }
         curl_close($ch);
 
         return $response;
     }
 
-    protected function errorMessage($message): string
-    {
-        return '<!DOCTYPE html>
-            <html lang="en">
-            <head>
-                    <meta name="viewport" content="width=device-width, initial-scale=1">
-                    <title>Error</title>
-                    <link rel="stylesheet" type="text/css" href="style.css" />
-            </head>
-            <body>
-            <div id="fatalError"><div id="fatalErrorInner"><span>Something\'s gone wrong!</span>' . $message . '</div></div>
-            </body>
-            </html>';
-    }
-
-    /**
-     * @throws Error
-     */
     public function getEmailAddressFromResponseResult($response): string
     {
-        $accessToken = $response['access_token'];
+        $email = "";
 
-        if ($response['id_token']) {
-            try {
-                $idToken = json_decode(base64_decode(explode('.', $response['id_token'])[1]));
+        try {
+            $idToken = json_decode(base64_decode(str_replace('_', '/', str_replace('-', '+', explode('.', $response['id_token'])[1]))));
 
-                if ($idToken && $idToken->preferred_username) {
-                    $this->log->debug(self::METHOD . ': id_token: ' . json_encode($idToken));
+            if ($idToken && $idToken->email) {
+                $this->log->debug(self::METHOD . ': id_token: ' . json_encode($idToken));
 
-                    return $idToken->preferred_username;
-                }
-            } catch (Exception $e) {
-                // Exception handling
-                $this->log->error(self::METHOD . ': Error while getting email address from id_token: ' . $e->getMessage());
+                $email = $idToken->email;
             }
+        } catch (Exception $e) {
+            $this->log->error(self::METHOD . ': Error while getting email address from id_token: ' . $e->getMessage());
         }
-
-        $profileData = $this->sendGetRequest('https://graph.microsoft.com/v1.0/me/', $accessToken);
-
-        $this->log->debug(self::METHOD . ': Profile data: ' . json_encode($profileData));
-
-        if (!$profileData) {
-            throw new Error('Profile data not received');
-        }
-
-        $profileData = json_decode($profileData, true);
-        $email = $profileData['mail'] ?? $profileData['userPrincipalName'];
-
-        if (!$email) {
-            throw new Error('Email not received' . print_r($profileData));
-        }
-
-        $this->log->debug(self::METHOD . ': Founded email: ' . $email);
 
         return $email;
-    }
-
-    protected function sendGetRequest($URL, $accessToken)
-    {
-        $ch = curl_init($URL);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Authorization: Bearer ' . $accessToken, 'Content-Type: application/json'));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $response = curl_exec($ch);
-        curl_close($ch);
-
-        return $response;
     }
 }

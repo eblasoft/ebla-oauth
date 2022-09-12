@@ -9,7 +9,9 @@ define('ebla-oauth:views/settings/fields/oauth-provider', 'views/fields/enum', f
                 this.getMetadata().get(['app', 'oAuthProviders']) || {}
             );
 
-            this.params.options.unshift('');
+            if (!this.model.get(this.name)) {
+                this.params.options.unshift('');
+            }
         },
     });
 });
