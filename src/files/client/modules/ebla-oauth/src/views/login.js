@@ -1,4 +1,4 @@
-define('ebla-oauth:views/login', 'views/login', function (Dep) {
+define('ebla-oauth:views/login', ['views/login'], function (Dep) {
 
     return Dep.extend({
 
@@ -153,7 +153,7 @@ define('ebla-oauth:views/login', 'views/login', function (Dep) {
                     this.notify(false);
 
                     this.trigger('login', data.user.userName, data);
-                }).fail(xhr => {
+                }).catch(xhr => {
                     this.undisableForm();
 
                     if (xhr.status === 401) {

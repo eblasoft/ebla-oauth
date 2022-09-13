@@ -65,6 +65,9 @@ class AzureOAuth implements Provider
         ];
     }
 
+    /**
+     * @throws Error
+     */
     public function getAccessTokenFromAuthorizationCode(string $code): array
     {
         $integration = $this->entityManager->getEntity('Integration', self::METHOD);

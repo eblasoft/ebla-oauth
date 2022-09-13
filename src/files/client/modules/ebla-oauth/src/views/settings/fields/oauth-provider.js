@@ -1,4 +1,4 @@
-define('ebla-oauth:views/settings/fields/oauth-provider', 'views/fields/enum', function (Dep) {
+define('ebla-oauth:views/settings/fields/oauth-provider', ['views/fields/enum'], function (Dep) {
 
     return Dep.extend({
 

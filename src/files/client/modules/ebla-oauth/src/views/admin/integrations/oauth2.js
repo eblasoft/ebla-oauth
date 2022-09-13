@@ -1,4 +1,4 @@
-define('ebla-oauth:views/admin/integrations/oauth2', 'views/admin/integrations/oauth2', function (Dep) {
+define('ebla-oauth:views/admin/integrations/oauth2', ['views/admin/integrations/oauth2'], function (Dep) {
 
     return Dep.extend({
 
