@@ -40,7 +40,7 @@ define('ebla-oauth:views/login', ['views/login'], function (Dep) {
 
             this.$el.find('.panel-body form')
                 .append($('<a />')
-                    .addClass('btn')
+                    .addClass('btn btn-xx-wide')
                     .attr('href', 'javascript:')
                     .attr('data-action', this.oAuthMethod.toLowerCase())
                     .css({
