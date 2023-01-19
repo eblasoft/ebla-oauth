@@ -1,0 +1,15 @@
+{
+    "fields": {
+        "clientId": {
+            "type": "varchar",
+            "maxLength": 255,
+            "required": true
+        },
+        "clientSecret": {
+            "type": "varchar",
+            "maxLength": 255,
+            "required": true
+        }
+    },
+    "view": "ebla-oauth:views/admin/integrations/oauth2"
+}

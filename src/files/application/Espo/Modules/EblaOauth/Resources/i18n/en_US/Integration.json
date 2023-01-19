@@ -3,6 +3,14 @@
         "tenantId": "Tenant Id"
     },
     "help": {
-        "Azure": "Obtain Credentials from [here](https://portal.azure.com)."
+        "Azure": "Obtain Credentials from [here](https://portal.azure.com).",
+        "Facebook": "Obtain Credentials from [here](https://developers.facebook.com/docs/facebook-login/web).",
+        "FusionAuth": "Obtain Credentials from [here](https://fusionauth.io/docs/v1/tech/oauth)."
+    },
+    "titles": {
+        "Azure": "OAuth &raquo; Azure",
+        "Facebook" : "OAuth &raquo; Facebook",
+        "FusionAuth" : "OAuth &raquo; FusionAuth",
+        "Google" : "OAuth &raquo; Google"
     }
 }

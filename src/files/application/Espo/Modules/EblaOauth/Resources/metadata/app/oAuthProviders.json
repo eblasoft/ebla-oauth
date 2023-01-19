@@ -1,6 +1,21 @@
 {
     "Azure": {
-        "implementationClassName": "Espo\\Modules\\EblaOauth\\OAuthProviders\\Azure\\AzureOAuth",
-        "scopes": "openid email"
+        "implementationClassName": "Espo\\Modules\\EblaOauth\\OAuthProviders\\Azure",
+        "color": "#000"
+    },
+    "FusionAuth": {
+        "color": "#83c5be",
+        "authorizationUrl": "https://sandbox.fusionauth.io/oauth2/authorize",
+        "tokenUrl": "https://sandbox.fusionauth.io/oauth2/token"
+    },
+    "Google": {
+        "color": "#d62828",
+        "authorizationUrl": "https://accounts.google.com/o/oauth2/v2/auth",
+        "tokenUrl": "https://oauth2.googleapis.com/token"
+    },
+    "Facebook": {
+        "color": "#023e8a",
+        "authorizationUrl": "https://facebook.com/dialog/oauth",
+        "tokenUrl": "https://graph.facebook.com/v14.0/oauth/access_token"
     }
 }

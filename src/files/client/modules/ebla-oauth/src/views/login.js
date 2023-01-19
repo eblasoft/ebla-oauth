@@ -3,8 +3,10 @@ define('ebla-oauth:views/login', ['views/login'], function (Dep) {
     return Dep.extend({
 
         events: {
-            'click a[data-action="azure"]': function () {
-                this.connect()
+            'click a[data-action="oauth"] ': function (e) {
+                const provider = $(e.currentTarget).data('id');
+
+                this.connect(provider);
             },
             ...Dep.prototype.events
         },
@@ -12,23 +14,18 @@ define('ebla-oauth:views/login', ['views/login'], function (Dep) {
         setup: function () {
             Dep.prototype.setup.call(this);
 
-            this.oAuthMethod = this.getConfig().get('oAuthMethod');
+            this.oAuthProviders = this.getConfig().get('oAuthProviders') || [];
 
-            if (this.getConfig().get('authenticationMethod') !== 'OAuth' || !this.oAuthMethod) return;
+            if (!this.oAuthProviders.length) return;
 
             this.wait(true);
 
-            let url = `ExternalAccount/action/getOAuth2Info?method=${this.oAuthMethod}`;
-
-            if (this.getMetadata().get(['app', 'oAuthProviders', this.oAuthMethod, 'infoUrl'])) {
-                url = this.getMetadata().get(['app', 'oAuthProviders', this.oAuthMethod, 'infoUrl']);
-            }
-
             $.ajax({
-                url: url,
+                url: 'ExternalAccount/action/getOAuth2Info',
                 dataType: 'json'
             }).done(response => {
-                this.oAuthInfo = response;
+                this.oAuthProviderData = response || {};
+
                 this.wait(false);
             });
         },
@@ -36,32 +33,38 @@ define('ebla-oauth:views/login', ['views/login'], function (Dep) {
         afterRender: function () {
             Dep.prototype.afterRender.call(this);
 
-            if (!this.oAuthMethod) return;
+            if (!this.oAuthProviderData) return;
 
-            this.$el.find('.panel-body form')
-                .append($('<a />')
-                    .addClass('btn btn-xx-wide')
-                    .attr('href', 'javascript:')
-                    .attr('data-action', this.oAuthMethod.toLowerCase())
-                    .css({
-                        color: '#fff',
-                        margin: '10px auto',
-                        'background-color': '#000',
-                        padding: '5px',
-                    })
-                    .html('Sign in with Microsoft'));
+            Object.keys(this.oAuthProviderData).forEach(item => {
+                this.$el.find('.panel-body form')
+                    .append(
+                        $('<div />')
+                            .append(
+                                $('<a />')
+                                    .addClass('btn btn-xx-wide')
+                                    .attr('href', 'javascript:')
+                                    .attr('data-action', 'oauth')
+                                    .attr('data-id', item)
+                                    .css({
+                                        color: '#fff',
+                                        margin: '10px auto',
+                                        'background-color': this.oAuthProviderData[item]['color'],
+                                        padding: '5px',
+                                    })
+                                    .html(this.oAuthProviderData[item]['buttonTitle'])));
+            });
         },
 
         disableForm: function () {
             Dep.prototype.disableForm.call(this);
 
-            this.$el.find(`a[data-action="${this.oAuthMethod}"]`).addClass('disabled').attr('disabled', 'disabled');
+            this.$el.find('a[data-action="oauth"]').addClass('disabled').attr('disabled', 'disabled');
         },
 
         undisableForm: function () {
             Dep.prototype.undisableForm.call(this);
 
-            this.$el.find(`a[data-action="${this.oAuthMethod}"]`).removeClass('disabled').removeAttr('disabled');
+            this.$el.find('a[data-action="oauth"]').removeClass('disabled').removeAttr('disabled');
         },
 
         popup: function (options, callback) {
@@ -74,7 +77,6 @@ define('ebla-oauth:views/login', ['views/login'], function (Dep) {
             const self = this;
 
             let path = options.path;
-
             const urlParams = [];
             const params = (options.params || {});
             for (let name in params) {
@@ -123,13 +125,15 @@ define('ebla-oauth:views/login', ['views/login'], function (Dep) {
             };
         },
 
-        connect: function () {
+        connect: function (provider) {
             this.disableForm();
+
+            const providerData = this.oAuthProviderData[provider];
 
             Espo.Ui.notify(this.translate('pleaseWait', 'messages'));
 
-            this.popup(this.oAuthInfo, (res) => {
-                let userName = '_oAuthCode';
+            this.popup(providerData, (res) => {
+                let userName = '$' + provider;
                 let password = res.code;
                 let authString = '';
 
@@ -142,13 +146,13 @@ define('ebla-oauth:views/login', ['views/login'], function (Dep) {
                 }
 
                 Espo.Ajax.getRequest('App/user', null, {
-                    login: true,
                     headers: {
                         'Authorization': 'Basic ' + authString,
                         'Espo-Authorization': authString,
                         'Espo-Authorization-By-Token': false,
                         'Espo-Authorization-Create-Token-Secret': true,
                     },
+                    login: true,
                 }).then(data => {
                     this.notify(false);
 

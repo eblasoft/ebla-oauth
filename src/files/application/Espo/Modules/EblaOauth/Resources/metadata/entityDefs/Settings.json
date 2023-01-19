@@ -1,7 +1,7 @@
 {
     "fields": {
-        "oAuthMethod": {
-            "type": "enum",
+        "oAuthProviders": {
+            "type": "multiEnum",
             "required": true,
             "isSorted": true,
             "global": true,

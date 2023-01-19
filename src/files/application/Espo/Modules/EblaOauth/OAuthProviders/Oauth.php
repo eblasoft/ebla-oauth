@@ -1,6 +1,7 @@
 <?php
 
-namespace Espo\Modules\EblaOauth\OAuthProviders\Azure;
+namespace Espo\Modules\EblaOauth\OAuthProviders;
+
 
 use Espo\Core\Exceptions\Error;
 use Espo\Core\ORM\EntityManager;
@@ -12,56 +13,48 @@ use Espo\Modules\EblaOauth\Classes\OAuth\Provider;
 use Exception;
 use stdClass;
 
-class AzureOAuth implements Provider
+class Oauth implements Provider
 {
-    public const METHOD = 'Azure';
-
+    public const defaultScopes = "openid email";
+    public string $providerName;
     protected EntityManager $entityManager;
-
     protected Metadata $metadata;
-
     protected Config $config;
-
     protected Log $log;
 
     public function __construct(
         EntityManager $entityManager,
         Metadata      $metadata,
         Config        $config,
-        Log           $log
+        Log           $log,
+        string        $providerName
     )
     {
         $this->entityManager = $entityManager;
         $this->metadata = $metadata;
         $this->config = $config;
         $this->log = $log;
+        $this->providerName = $providerName;
     }
 
     public function getClientInfo(): ?stdClass
     {
-        /* @var $integration Integration */
-        $integration = $this->entityManager->getEntity('Integration', self::METHOD);
+        /* @var Integration $integration */
+        $integration = $this->entityManager->getEntity('Integration', $this->providerName);
 
-        if (!$integration) {
-            return null;
-        }
-
-        $scopes = $this->metadata->get(['app', 'oAuthProviders', self::METHOD, 'scopes']);
-
-        $tenantId = $integration->get('tenantId');
-
-        $url = "https://login.microsoftonline.com/$tenantId/oauth2/v2.0/authorize";
+        if (!$integration || !$integration->get('enabled')) return null;
 
         return (object)[
-            'path' => $url,
+            'path' => $this->metadata->get(['app', 'oAuthProviders', $this->providerName, 'authorizationUrl']),
+            "color" => $this->metadata->get(['app', 'oAuthProviders', $this->providerName, 'color']) ?? '#000000',
+            'buttonTitle' => $this->metadata->get(['app', 'oAuthProviders', $this->providerName, 'buttonTitle']) ?? 'Sign in with ' . $this->providerName,
             'params' => [
                 'client_id' => $integration->get('clientId'),
-                'tenant_id' => $integration->get('tenantId'),
                 'response_type' => 'code',
                 'access_type' => 'offline',
-                'scope' => $scopes,
+                'scope' => $this->metadata->get(['app', 'oAuthProviders', $this->providerName, 'scopes']) ?? self::defaultScopes,
                 'redirect_uri' => $this->config->get('siteUrl') . '/oauth-callback.php',
-            ]
+            ],
         ];
     }
 
@@ -70,13 +63,13 @@ class AzureOAuth implements Provider
      */
     public function getAccessTokenFromAuthorizationCode(string $code): array
     {
-        $integration = $this->entityManager->getEntity('Integration', self::METHOD);
+        /* @var $integration Integration */
+        $integration = $this->entityManager->getEntity('Integration', $this->providerName);
 
         $clintId = $integration->get('clientId');
         $clientSecret = $integration->get('clientSecret');
-        $tenantId = $integration->get('tenantId');
         $redirectUri = $this->config->get('siteUrl') . '/oauth-callback.php';
-        $endpoint = 'https://login.microsoftonline.com/' . $tenantId . '/oauth2/v2.0/token';
+        $endpoint = $this->metadata->get(['app', 'oAuthProviders', $this->providerName, 'tokenUrl']);
 
         $requestData = 'grant_type=authorization_code&client_id=' .
             $clintId . '&redirect_uri=' .
@@ -84,11 +77,11 @@ class AzureOAuth implements Provider
             $code . '&client_secret=' .
             $clientSecret;
 
-        $this->log->debug(self::METHOD . ': Authentication request data: ' . $requestData);
+        $this->log->debug($this->providerName . ': Authentication request data: ' . $requestData);
 
         $response = $this->postRequest($endpoint, $requestData);
 
-        $this->log->debug(self::METHOD . ': Authentication response data: ' . $response);
+        $this->log->debug($this->providerName . ': Authentication response data: ' . $response);
 
         return json_decode($response, true);
     }
@@ -120,12 +113,12 @@ class AzureOAuth implements Provider
             $idToken = json_decode(base64_decode(str_replace('_', '/', str_replace('-', '+', explode('.', $response['id_token'])[1]))));
 
             if ($idToken && $idToken->email) {
-                $this->log->debug(self::METHOD . ': id_token: ' . json_encode($idToken));
+                $this->log->debug($this->providerName . ': id_token: ' . json_encode($idToken));
 
                 $email = $idToken->email;
             }
         } catch (Exception $e) {
-            $this->log->error(self::METHOD . ': Error while getting email address from id_token: ' . $e->getMessage());
+            $this->log->error($this->providerName . ': Error while getting email address from id_token: ' . $e->getMessage());
         }
 
         return $email;

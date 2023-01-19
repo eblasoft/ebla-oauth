@@ -7,7 +7,7 @@
             "rows": [
                 [
                     {
-                        "name": "oAuthMethod"
+                        "name": "oAuthProviders"
                     },
                     {
                         "name": "oAuthEnforceLogin"
@@ -16,7 +16,7 @@
             ]
         },
         "fieldList": [
-            "oAuthMethod",
+            "oAuthProviders",
             "oAuthEnforceLogin"
         ],
         "dynamicLogic": {

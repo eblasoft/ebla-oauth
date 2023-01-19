@@ -9,38 +9,36 @@ use Espo\Core\{Api\Request,
     Authentication\Logins\Espo,
     Authentication\Result,
     Authentication\Result\FailReason,
-    Exceptions\Error,
     InjectableFactory,
     ORM\EntityManager,
-    Utils\Log
+    Utils\Log,
+    Utils\Metadata
 };
 use Espo\Entities\User;
 use Espo\Modules\EblaOauth\Classes\OAuth\Provider;
-use Espo\Modules\EblaOauth\Classes\OAuth\ProviderFactory;
+use Espo\Modules\EblaOauth\OAuthProviders\Oauth as OauthProvider;
 
 class OAuth implements Login
 {
-
-    protected Provider $provider;
     private EntityManager $entityManager;
     private Log $log;
     private Espo $baseLogin;
+    private InjectableFactory $injectableFactory;
+    private Metadata $metadata;
 
-    /**
-     * @throws Error
-     */
     public function __construct(
         EntityManager     $entityManager,
         Log               $log,
         Espo              $baseLogin,
-        InjectableFactory $injectableFactory
+        InjectableFactory $injectableFactory,
+        Metadata          $metadata
     )
     {
         $this->entityManager = $entityManager;
         $this->log = $log;
         $this->baseLogin = $baseLogin;
-
-        $this->provider = $injectableFactory->create(ProviderFactory::class)->create();
+        $this->injectableFactory = $injectableFactory;
+        $this->metadata = $metadata;
     }
 
     /**
@@ -57,12 +55,13 @@ class OAuth implements Login
         if ($authToken) {
             return $this->checkAuthToken($username, $authToken);
         }
-
-        if ($username !== "_oAuthCode") {
+        if (substr($username, 0, 1) !== '$') {
             return $this->baseLogin->login($data, $request);
         }
 
-        return $this->doLogin($code, $username);
+        $providerName = substr($username, 1);
+
+        return $this->doLogin($code, $providerName);
     }
 
     /**
@@ -116,18 +115,20 @@ class OAuth implements Login
 
     /**
      * @param string $code
-     * @param string $username
+     * @param string $providerName
      * @return Result
      */
-    protected function doLogin(string $code, string $username): Result
+    protected function doLogin(string $code, string $providerName): Result
     {
-        $response = $this->provider->getAccessTokenFromAuthorizationCode($code);
+        $provider = $this->getProvider($providerName);
+
+        $response = $provider->getAccessTokenFromAuthorizationCode($code);
 
         if (!$response['id_token']) {
             return Result::fail(FailReason::CODE_NOT_VERIFIED);
         }
 
-        $emailAddress = $this->provider->getEmailAddressFromResponseResult($response);
+        $emailAddress = $provider->getEmailAddressFromResponseResult($response);
 
         $user = $this->entityManager
             ->getRDBRepository('User')
@@ -139,12 +140,26 @@ class OAuth implements Login
 
         if (!$user) {
             $this->log->warning(
-                "OAuth: Authentication success for user $username, but user is not created in EspoCRM."
+                "OAuth: Authentication success for user $providerName, but user is not created in EspoCRM."
             );
 
             return Result::fail(FailReason::USER_NOT_FOUND);
         }
 
         return Result::success($user);
+    }
+
+    protected function getProvider(string $providerName): Provider
+    {
+        /* @var Provider $className */
+        $className = $this->metadata->get(['app', 'oAuthProviders', $providerName, 'implementationClassName']);
+
+        if (!$className) {
+            $className = OauthProvider::class;
+        }
+
+        return $this->injectableFactory->createWith($className, [
+            'providerName' => $providerName,
+        ]);
     }
 }

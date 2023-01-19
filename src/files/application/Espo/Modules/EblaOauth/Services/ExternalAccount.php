@@ -3,7 +3,8 @@
 namespace Espo\Modules\EblaOauth\Services;
 
 use Espo\Core\Exceptions\Error;
-use Espo\Modules\EblaOauth\Classes\OAuth\ProviderFactory;
+use Espo\Modules\EblaOauth\Classes\OAuth\Provider;
+use Espo\Modules\EblaOauth\OAuthProviders\Oauth;
 use stdClass;
 
 class ExternalAccount extends \Espo\Services\ExternalAccount
@@ -11,15 +12,39 @@ class ExternalAccount extends \Espo\Services\ExternalAccount
     /**
      * @throws Error
      */
-    public function getActionGetOAuth2Info(): ?stdClass
+    public function getOAuthProvidersData(): ?stdClass
     {
-        $provider = $this->getProviderFactory()->create();
+        $providers = $this->config->get('oAuthProviders');
 
-        return $provider->getClientInfo();
+        if (!$providers) {
+            throw new Error("No `oAuthProvider` in config.");
+        }
+
+        $data = (object)[];
+        foreach ($providers as $providerName) {
+            $provider = $this->getProvider($providerName);
+
+            $providerData = $provider->getClientInfo();
+
+            if (!$providerData) continue;
+
+            $data->$providerName = $providerData;
+        }
+
+        return $data;
     }
 
-    protected function getProviderFactory(): ProviderFactory
+    protected function getProvider(string $providerName): Provider
     {
-        return $this->injectableFactory->create(ProviderFactory::class);
+        /* @var Provider $className */
+        $className = $this->metadata->get(['app', 'oAuthProviders', $providerName, 'implementationClassName']);
+
+        if (!$className) {
+            $className = Oauth::class;
+        }
+
+        return $this->injectableFactory->createWith($className, [
+            'providerName' => $providerName,
+        ]);
     }
 }
