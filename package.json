@@ -1,6 +1,6 @@
 {
   "name": "ebla-oauth",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "",
   "scripts": {
     "test": "site/vendor/bin/phpunit tests/unit/Espo/Modules/EblaOauth",
