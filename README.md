@@ -1,3 +1,6 @@
+#NOTE:
+This feature already implemented on Espocrm 7.5, and no more maintenance expected
+
 # Azure OAuth by Eblasoft
 
 Authentication extension that allows EspoCRM to authenticate 
